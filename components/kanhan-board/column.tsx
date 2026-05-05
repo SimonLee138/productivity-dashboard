@@ -1,21 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import KanbanCard from "./kanban-card";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 
-
-export default function Column({ title, cards }: any) {
+export default function Column({ title, cards, themeColor }: any) {
+  const [columnCards, setColumnCards] = useState(cards);
   return (
     <DragDropContext onDragEnd={() => { }}>
       <div key={title} className="flex flex-col gap-2 min-w-3xs border border-gray-300 rounded-lg p-4">
-        <Badge className="w-max bg-gray-200 text-gray-700">
+        <Badge className={`w-max ${themeColor}`}>
           <div className="font-semibold uppercase">{title}</div>
         </Badge>
         <Droppable droppableId={`droppable-${title}`}>
           {(provided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className="bg-gray-100 p-4 rounded min-h-[100px]">
-              {cards.map((card: any, index: number) => (
+            <div ref={provided.innerRef} {...provided.droppableProps} className="bg-gray-100 p-4 rounded-lg min-h-[100px]">
+              {columnCards.map((card: any, index: number) => (
                 <Draggable key={card.id} draggableId={card.id} index={index}>
                   {(provided) => (
                     <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
@@ -28,6 +30,21 @@ export default function Column({ title, cards }: any) {
             </div>
           )}
         </Droppable>
+        <Button variant="ghost" size="sm" className="mt-2 justify-start" onClick={() => { 
+          setColumnCards((prevCards: any[]) => [
+            ...prevCards,
+            {
+              id: `card-${Date.now()}`,
+              title: "New Task",
+              description: "",
+              priority: "Low",
+              assignee: "",
+              dueDate: "",
+            },
+          ]);
+        }}>
+          + Add Card
+        </Button>
       </div>
     </DragDropContext>
   )

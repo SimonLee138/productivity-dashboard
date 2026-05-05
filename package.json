@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
+    "@neondatabase/serverless": "^1.1.0",
     "@tabler/icons-react": "^3.41.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
