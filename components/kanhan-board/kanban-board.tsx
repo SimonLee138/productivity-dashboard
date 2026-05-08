@@ -1,4 +1,7 @@
-import { Badge } from "../ui/badge";
+"use client";
+
+import { DragDropContext } from "@hello-pangea/dnd";
+import { useState } from "react";
 import Column from "./column";
 
 const initialData = {
@@ -33,15 +36,95 @@ const initialData = {
 };
 
 export default function KanbanBoard() {
+  const [boardData, setBoardData] = useState(initialData);
+
+  const onDragEnd = (result: any) => {
+    const { destination, source } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    const sourceColumn = boardData.columns[source.droppableId as keyof typeof boardData.columns];
+    const destinationColumn = boardData.columns[destination.droppableId as keyof typeof boardData.columns];
+
+    if (source.droppableId === destination.droppableId) {
+      const reorderedCards = [...sourceColumn.cards];
+      const [movedCard] = reorderedCards.splice(source.index, 1);
+      reorderedCards.splice(destination.index, 0, movedCard);
+
+      setBoardData((prev) => ({
+        ...prev,
+        columns: {
+          ...prev.columns,
+          [sourceColumn.id]: {
+            ...sourceColumn,
+            cards: reorderedCards,
+          },
+        },
+      }));
+      return;
+    }
+
+    const sourceCards = [...sourceColumn.cards];
+    const destinationCards = [...destinationColumn.cards];
+    const [movedCard] = sourceCards.splice(source.index, 1);
+    destinationCards.splice(destination.index, 0, movedCard);
+
+    setBoardData((prev) => ({
+      ...prev,
+      columns: {
+        ...prev.columns,
+        [sourceColumn.id]: {
+          ...sourceColumn,
+          cards: sourceCards,
+        },
+        [destinationColumn.id]: {
+          ...destinationColumn,
+          cards: destinationCards,
+        },
+      },
+    }));
+  };
+
+  const handleAddCard = (columnId: string, card: any) => {
+    setBoardData((prev) => ({
+      ...prev,
+      columns: {
+        ...prev.columns,
+        [columnId]: {
+          ...prev.columns[columnId as keyof typeof prev.columns],
+          cards: [...prev.columns[columnId as keyof typeof prev.columns].cards, card],
+        },
+      },
+    }));
+  };
+
   return (
     <div className="flex flex-col w-screen">
       <h1 className="text-xl font-bold">Kanban Board</h1>
-      <div className="flex mx-2 mt-4 gap-2">
-          {initialData.columnOrder.map((columnId) => {
-            const column = initialData.columns[columnId as keyof typeof initialData.columns];
-            return <Column key={column.id} title={column.title} cards={column.cards} themeColor={column.themeColor} />;
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="flex mx-2 mt-4 gap-2">
+          {boardData.columnOrder.map((columnId) => {
+            const column = boardData.columns[columnId as keyof typeof boardData.columns];
+            return (
+              <Column
+                key={column.id}
+                columnId={column.id}
+                title={column.title}
+                cards={column.cards}
+                themeColor={column.themeColor}
+                onAddCard={handleAddCard}
+              />
+            );
           })}
         </div>
+      </DragDropContext>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-// components/KanbanCard.tsx
+"use client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,11 +18,15 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import * as React from "react";
 
 export default function KanbanCard({ card, ...props }: any) {
+  const [priority, setPriority] = React.useState(card.priority);
   return (
     <Card
       className="mb-3 cursor-grab active:cursor-grabbing transition-all hover:shadow-md"
@@ -31,19 +35,20 @@ export default function KanbanCard({ card, ...props }: any) {
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <h4 className="font-medium leading-tight">{card.title}</h4>
-          {card.priority && (
+          {priority && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant={card.priority === "High" ? "destructive" : card.priority === "Medium" ? "secondary" : "outline"}>{card.priority}</Button>
+                <Button variant={priority === "High" ? "destructive" : priority === "Normal" ? "secondary" : "outline"}>{priority}</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-45">
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Priority</DropdownMenuLabel>
-                  <DropdownMenuItem>Urgent</DropdownMenuItem>
-                  <DropdownMenuItem>High</DropdownMenuItem>
-                  <DropdownMenuItem>Normal</DropdownMenuItem>
-                  <DropdownMenuItem>Low</DropdownMenuItem>
-                  <DropdownMenuItem>Clear</DropdownMenuItem>
+                  <DropdownMenuRadioGroup value={priority} onValueChange={setPriority}>
+                  <DropdownMenuRadioItem value="Urgent">Urgent</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="High">High</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Normal">Normal</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Low">Low</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Add Personal Priority</DropdownMenuLabel>
