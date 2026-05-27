@@ -3,40 +3,48 @@
 import { DragDropContext } from "@hello-pangea/dnd";
 import { useState } from "react";
 import Column from "./column";
+import { getBoardData } from "@/lib/actions";
+import * as React from "react";
 
-const initialData = {
-  columns: {
-    "column-1": {
-      id: "column-1",
-      title: "To Do",
-      cards: [
-        { id: "card-1", title: "Task 1", description: "Description for Task 1", priority: "High", assignee: "Alice", dueDate: "2024-06-30" },
-        { id: "card-2", title: "Task 2", description: "Description for Task 2", priority: "Low", assignee: "Bob", dueDate: "2024-07-05" },
-      ],
-      themeColor: "bg-gray-200 text-gray-800",
-    },
-    "column-2": {
-      id: "column-2",
-      title: "In Progress",
-      cards: [
-        { id: "card-3", title: "Task 3", description: "Description for Task 3", priority: "Medium", assignee: "Charlie", dueDate: "2024-07-01" },
-      ],
-      themeColor: "bg-blue-200 text-blue-800",
-    },
-    "column-3": {
-      id: "column-3",
-      title: "Complete",
-      cards: [
-        { id: "card-4", title: "Task 4", description: "Description for Task 4", priority: "Low", assignee: "Dave", dueDate: "2024-06-28" },
-      ],
-      themeColor: "bg-green-200 text-green-800",
-    },
-  },
-  columnOrder: ["column-1", "column-2", "column-3"],
-};
 
 export default function KanbanBoard() {
-  const [boardData, setBoardData] = useState(initialData);
+  const [boardData, setBoardData] = useState({
+    columns: {} as Record<string, any>,
+    columnOrder: [] as string[],
+  });
+
+  React.useEffect(() => {
+    getBoardData("979bc330-23c7-45a6-8ef5-dbb71d52b7bb").then((data) => {
+      const columns: Record<string, any> = {};
+      data.forEach((item) => {
+        if (!columns[item.col_id]) {
+          columns[item.col_id] = {
+            id: item.col_id,
+            title: item.col_title,
+            cards: [],
+            themeColor: item.theme_color,
+            columnColor: item.column_color,
+            position: item.col_position,
+          };
+        }
+        columns[item.col_id].cards.push({
+          id: item.card_id,
+          title: item.card_title,
+          description: item.description,
+          priority: item.priority,
+          assignee: item.assignee,
+          dueDate: item.due_date,
+          position: item.card_position,
+        });
+      });
+
+      const columnOrder = Object.values(columns)
+        .sort((a: any, b: any) => a.position - b.position)
+        .map((column: any) => column.id);
+
+      setBoardData({ columns, columnOrder });
+    });
+  }, []);
 
   const onDragEnd = (result: any) => {
     const { destination, source } = result;
@@ -50,8 +58,10 @@ export default function KanbanBoard() {
       return;
     }
 
-    const sourceColumn = boardData.columns[source.droppableId as keyof typeof boardData.columns];
-    const destinationColumn = boardData.columns[destination.droppableId as keyof typeof boardData.columns];
+    const sourceColumn = boardData.columns[source.droppableId];
+    const destinationColumn = boardData.columns[destination.droppableId];
+
+    if (!sourceColumn || !destinationColumn) return;
 
     if (source.droppableId === destination.droppableId) {
       const reorderedCards = [...sourceColumn.cards];
@@ -98,8 +108,23 @@ export default function KanbanBoard() {
       columns: {
         ...prev.columns,
         [columnId]: {
-          ...prev.columns[columnId as keyof typeof prev.columns],
-          cards: [...prev.columns[columnId as keyof typeof prev.columns].cards, card],
+          ...prev.columns[columnId],
+          cards: [...prev.columns[columnId].cards, card],
+        },
+      },
+    }));
+  };
+
+  const handleUpdateCard = (columnId: string, cardId: string, updates: any) => {
+    setBoardData((prev) => ({
+      ...prev,
+      columns: {
+        ...prev.columns,
+        [columnId]: {
+          ...prev.columns[columnId],
+          cards: prev.columns[columnId].cards.map((card: any) =>
+            card.id === cardId ? { ...card, ...updates } : card
+          ),
         },
       },
     }));
@@ -111,7 +136,7 @@ export default function KanbanBoard() {
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex mx-2 mt-4 gap-2">
           {boardData.columnOrder.map((columnId) => {
-            const column = boardData.columns[columnId as keyof typeof boardData.columns];
+            const column = boardData.columns[columnId];
             return (
               <Column
                 key={column.id}
@@ -120,6 +145,8 @@ export default function KanbanBoard() {
                 cards={column.cards}
                 themeColor={column.themeColor}
                 onAddCard={handleAddCard}
+                onUpdateCard={handleUpdateCard}
+                columnColor={column.columnColor}
               />
             );
           })}
