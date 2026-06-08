@@ -70,6 +70,23 @@ export async function updateCard(data: UpdateCardData) {
   }
 }
 
+export async function updateCardPriority(cardId: string, priority: string) {
+  try {
+    const rows = await sql`
+      UPDATE cards
+      SET priority = ${priority},
+          updated_at = NOW()
+      WHERE id = ${cardId}
+      RETURNING *
+    ` as Card[];
+    
+    return rows[0];
+  } catch (error) {
+    console.error("Error updating card priority:", error);
+    throw new Error("Failed to update card priority");
+  }
+}
+
 export async function getBoardData(boardId: string) {
   try {
     const rows = (await sql`

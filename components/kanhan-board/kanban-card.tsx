@@ -25,9 +25,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import * as React from "react";
 import { X } from "lucide-react";
+import { updateCard, updateCardPriority } from "@/lib/actions";
 
 export default function KanbanCard({ card, ...props }: any) {
   const [priority, setPriority] = React.useState(card.priority);
+
   return (
     <Card
       className="mb-3 cursor-grab active:cursor-grabbing transition-all hover:shadow-md"
@@ -65,12 +67,16 @@ export default function KanbanCard({ card, ...props }: any) {
           {priority && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant={priority === "High" ? "destructive" : priority === "Normal" ? "secondary" : "outline"}>{priority}</Button>
+                <Button size="sm" variant={priority === "High" ? "destructive" : priority === "Normal" ? "secondary" : "outline"} onClick={(e) => e.stopPropagation()}>{priority}</Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-45">
+              <DropdownMenuContent className="w-45" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuGroup>
                   <DropdownMenuLabel>Priority</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup value={priority} onValueChange={setPriority}>
+                  <DropdownMenuRadioGroup value={priority} onValueChange={async (newPriority) => {
+                    setPriority(newPriority);
+
+                    await updateCardPriority(card.id, newPriority);
+                  }}>
                     <DropdownMenuRadioItem value="Urgent">Urgent</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="High">High</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="Normal">Normal</DropdownMenuRadioItem>
